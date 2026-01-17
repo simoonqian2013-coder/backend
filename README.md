@@ -22,6 +22,8 @@
 - `POST /api/users/assign-roles`
 - `GET /api/roles`
 - `POST /api/roles`
+- `PUT /api/roles/{id}`
+- `DELETE /api/roles/{id}`
 - `POST /api/roles/assign-permissions`
 - `GET /api/permissions`
 - `POST /api/permissions`

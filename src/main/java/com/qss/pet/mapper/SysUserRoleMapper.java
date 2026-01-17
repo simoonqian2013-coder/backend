@@ -24,4 +24,10 @@ public interface SysUserRoleMapper {
             WHERE user_id = #{userId}
             """)
     int deleteRolesByUserId(Long userId);
+
+    @Delete("""
+            DELETE FROM sys_user_role
+            WHERE role_id = #{roleId}
+            """)
+    int deleteUsersByRoleId(Long roleId);
 }
