@@ -1,6 +1,7 @@
 package com.qss.pet.service;
 
 import com.qss.pet.dto.UserCreateRequest;
+import com.qss.pet.dto.UserUpdateRequest;
 import com.qss.pet.entity.SysPermission;
 import com.qss.pet.entity.SysRole;
 import com.qss.pet.entity.SysUser;
@@ -21,4 +22,8 @@ public interface UserService {
     List<SysPermission> listPermissionsByUserId(Long userId);
 
     void updateLastLogin(Long userId);
+
+    boolean deleteUser(Long userId);
+
+    SysUser updateUser(Long userId, UserUpdateRequest request);
 }

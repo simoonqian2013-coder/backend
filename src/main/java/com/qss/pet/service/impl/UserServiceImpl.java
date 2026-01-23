@@ -2,6 +2,7 @@ package com.qss.pet.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.qss.pet.dto.UserCreateRequest;
+import com.qss.pet.dto.UserUpdateRequest;
 import com.qss.pet.entity.SysPermission;
 import com.qss.pet.entity.SysRole;
 import com.qss.pet.entity.SysUser;
@@ -101,5 +102,42 @@ public class UserServiceImpl implements UserService {
         user.setId(userId);
         user.setLastLoginAt(LocalDateTime.now());
         userMapper.updateById(user);
+    }
+
+    @Override
+    @Transactional
+    public boolean deleteUser(Long userId) {
+        SysUser existing = userMapper.selectById(userId);
+        if (existing == null) {
+            return false;
+        }
+        userRoleMapper.deleteRolesByUserId(userId);
+        userMapper.deleteById(userId);
+        return true;
+    }
+
+    @Override
+    @Transactional
+    public SysUser updateUser(Long userId, UserUpdateRequest request) {
+        SysUser user = userMapper.selectById(userId);
+        if (user == null) {
+            return null;
+        }
+        if (request.getPassword() != null && !request.getPassword().isBlank()) {
+            user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+        }
+        if (request.getNickname() != null) {
+            user.setNickname(request.getNickname());
+        }
+        if (request.getEmail() != null) {
+            user.setEmail(request.getEmail());
+        }
+        if (request.getPhone() != null) {
+            user.setPhone(request.getPhone());
+        }
+        user.setStatus(request.getStatus());
+        user.setUpdatedAt(LocalDateTime.now());
+        userMapper.updateById(user);
+        return user;
     }
 }
