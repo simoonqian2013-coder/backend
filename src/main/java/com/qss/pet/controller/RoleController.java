@@ -1,6 +1,7 @@
 package com.qss.pet.controller;
 
 import com.qss.pet.common.ApiResponse;
+import com.qss.pet.dto.AssignMenuRequest;
 import com.qss.pet.dto.AssignPermissionRequest;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.qss.pet.dto.RoleCreateRequest;
@@ -64,6 +65,13 @@ public class RoleController {
     @PostMapping("/api/roles/assign-permissions")
     public ApiResponse<Void> assignPermissions(@Valid @RequestBody AssignPermissionRequest request) {
         roleService.assignPermissions(request);
+        return ApiResponse.ok(null);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/api/roles/assign-menus")
+    public ApiResponse<Void> assignMenus(@Valid @RequestBody AssignMenuRequest request) {
+        roleService.assignMenus(request.getRoleId(), request.getMenuIds());
         return ApiResponse.ok(null);
     }
 }

@@ -18,4 +18,6 @@ public interface RoleService {
     boolean deleteRole(Long roleId);
 
     void assignPermissions(AssignPermissionRequest request);
+
+    void assignMenus(Long roleId, List<Long> menuIds);
 }

@@ -1,0 +1,233 @@
+package com.qss.pet.service.impl;
+
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.qss.pet.dto.MenuCreateRequest;
+import com.qss.pet.dto.MenuPermissionView;
+import com.qss.pet.dto.MenuUpdateRequest;
+import com.qss.pet.dto.MenuView;
+import com.qss.pet.entity.SysMenu;
+import com.qss.pet.mapper.SysMenuMapper;
+import com.qss.pet.mapper.SysMenuPermissionMapper;
+import com.qss.pet.mapper.SysRoleMenuMapper;
+import com.qss.pet.service.MenuService;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+@Service
+public class MenuServiceImpl implements MenuService {
+    private final SysMenuMapper menuMapper;
+    private final SysRoleMenuMapper roleMenuMapper;
+    private final SysMenuPermissionMapper menuPermissionMapper;
+
+    public MenuServiceImpl(SysMenuMapper menuMapper,
+                           SysRoleMenuMapper roleMenuMapper,
+                           SysMenuPermissionMapper menuPermissionMapper) {
+        this.menuMapper = menuMapper;
+        this.roleMenuMapper = roleMenuMapper;
+        this.menuPermissionMapper = menuPermissionMapper;
+    }
+
+    @Override
+    public List<MenuView> listMenuTree() {
+        List<SysMenu> menus = menuMapper.selectList(Wrappers.lambdaQuery(SysMenu.class)
+                .orderByAsc(SysMenu::getSort)
+                .orderByAsc(SysMenu::getId));
+        return buildTree(menus);
+    }
+
+    @Override
+    public List<MenuView> listMenuTreeByRoleIds(List<Long> roleIds) {
+        if (roleIds == null || roleIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<Long> menuIds = roleMenuMapper.selectMenuIdsByRoleIds(roleIds);
+        if (menuIds == null || menuIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<SysMenu> menus = menuMapper.selectList(Wrappers.lambdaQuery(SysMenu.class)
+                .in(SysMenu::getId, menuIds)
+                .orderByAsc(SysMenu::getSort)
+                .orderByAsc(SysMenu::getId));
+        List<Long> parentIds = menus.stream()
+                .map(SysMenu::getParentId)
+                .filter(parentId -> parentId != null && parentId != 0L)
+                .distinct()
+                .filter(parentId -> menus.stream().noneMatch(m -> Objects.equals(m.getId(), parentId)))
+                .collect(Collectors.toList());
+        if (!parentIds.isEmpty()) {
+            List<SysMenu> parents = menuMapper.selectList(Wrappers.lambdaQuery(SysMenu.class)
+                    .in(SysMenu::getId, parentIds));
+            menus.addAll(parents);
+        }
+        return buildTree(menus);
+    }
+
+    @Override
+    @Transactional
+    public SysMenu createMenu(MenuCreateRequest request) {
+        validateParent(request.getParentId(), null);
+        SysMenu menu = new SysMenu();
+        menu.setParentId(normalizeParentId(request.getParentId()));
+        menu.setTitle(request.getTitle());
+        menu.setPath(request.getPath());
+        menu.setIcon(request.getIcon());
+        menu.setHeader(request.getHeader());
+        menu.setSort(request.getSort());
+        menu.setStatus(request.getStatus());
+        menu.setCreatedAt(LocalDateTime.now());
+        menu.setUpdatedAt(LocalDateTime.now());
+        menuMapper.insert(menu);
+        return menu;
+    }
+
+    @Override
+    @Transactional
+    public SysMenu updateMenu(Long menuId, MenuUpdateRequest request) {
+        SysMenu menu = menuMapper.selectById(menuId);
+        if (menu == null) {
+            return null;
+        }
+        validateParent(request.getParentId(), menuId);
+        menu.setParentId(normalizeParentId(request.getParentId()));
+        menu.setTitle(request.getTitle());
+        menu.setPath(request.getPath());
+        menu.setIcon(request.getIcon());
+        menu.setHeader(request.getHeader());
+        menu.setSort(request.getSort());
+        menu.setStatus(request.getStatus());
+        menu.setUpdatedAt(LocalDateTime.now());
+        menuMapper.updateById(menu);
+        return menu;
+    }
+
+    @Override
+    @Transactional
+    public boolean deleteMenu(Long menuId) {
+        SysMenu menu = menuMapper.selectById(menuId);
+        if (menu == null) {
+            return false;
+        }
+        List<SysMenu> children = menuMapper.selectList(Wrappers.lambdaQuery(SysMenu.class)
+                .eq(SysMenu::getParentId, menuId));
+        for (SysMenu child : children) {
+            deleteMenuRelations(child.getId());
+            menuMapper.deleteById(child.getId());
+        }
+        deleteMenuRelations(menuId);
+        menuMapper.deleteById(menuId);
+        return true;
+    }
+
+    @Override
+    @Transactional
+    public void assignPermissions(Long menuId, List<Long> permissionIds) {
+        menuPermissionMapper.deletePermissionsByMenuId(menuId);
+        if (permissionIds == null || permissionIds.isEmpty()) {
+            return;
+        }
+        for (Long permissionId : permissionIds) {
+            menuPermissionMapper.insertMenuPermission(menuId, permissionId);
+        }
+    }
+
+    private void deleteMenuRelations(Long menuId) {
+        roleMenuMapper.deleteRolesByMenuId(menuId);
+        menuPermissionMapper.deletePermissionsByMenuId(menuId);
+    }
+
+    private void validateParent(Long parentId, Long menuId) {
+        Long normalizedParentId = normalizeParentId(parentId);
+        if (normalizedParentId == null) {
+            return;
+        }
+        if (menuId != null && Objects.equals(menuId, normalizedParentId)) {
+            throw new IllegalArgumentException("Parent menu cannot be itself");
+        }
+        SysMenu parent = menuMapper.selectById(normalizedParentId);
+        if (parent == null) {
+            throw new IllegalArgumentException("Parent menu not found");
+        }
+        if (parent.getParentId() != null && parent.getParentId() != 0L) {
+            throw new IllegalArgumentException("Menu supports at most 2 levels");
+        }
+    }
+
+    private Long normalizeParentId(Long parentId) {
+        if (parentId == null || parentId == 0L) {
+            return null;
+        }
+        return parentId;
+    }
+
+    private List<MenuView> buildTree(List<SysMenu> menus) {
+        if (menus == null || menus.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<Long> menuIds = menus.stream()
+                .map(SysMenu::getId)
+                .collect(Collectors.toList());
+        Map<Long, List<String>> permissionMap = buildPermissionMap(menuIds);
+        Map<Long, List<MenuView>> childrenMap = new HashMap<>();
+        List<MenuView> roots = new ArrayList<>();
+        for (SysMenu menu : menus) {
+            MenuView view = toView(menu, permissionMap.get(menu.getId()));
+            Long parentId = menu.getParentId();
+            if (parentId == null || parentId == 0L) {
+                roots.add(view);
+            } else {
+                childrenMap.computeIfAbsent(parentId, key -> new ArrayList<>()).add(view);
+            }
+        }
+        for (MenuView root : roots) {
+            List<MenuView> children = childrenMap.get(root.getId());
+            if (children != null) {
+                children.sort(Comparator.comparing(MenuView::getSort, Comparator.nullsLast(Integer::compareTo)));
+                root.setChildren(children);
+            }
+        }
+        roots.sort(Comparator.comparing(MenuView::getSort, Comparator.nullsLast(Integer::compareTo)));
+        return roots;
+    }
+
+    private Map<Long, List<String>> buildPermissionMap(List<Long> menuIds) {
+        List<MenuPermissionView> rows = menuPermissionMapper.selectPermissionCodesByMenuIds(menuIds);
+        if (rows == null || rows.isEmpty()) {
+            return new HashMap<>();
+        }
+        Map<Long, List<String>> permissionMap = new HashMap<>();
+        for (MenuPermissionView row : rows) {
+            permissionMap.computeIfAbsent(row.getMenuId(), key -> new ArrayList<>()).add(row.getCode());
+        }
+        return permissionMap;
+    }
+
+    private MenuView toView(SysMenu menu, List<String> permissions) {
+        MenuView view = new MenuView();
+        view.setId(menu.getId());
+        view.setParentId(menu.getParentId());
+        view.setTitle(menu.getTitle());
+        view.setPath(menu.getPath());
+        view.setIcon(menu.getIcon());
+        view.setHeader(menu.getHeader());
+        view.setSort(menu.getSort());
+        view.setStatus(menu.getStatus());
+        if (permissions != null && !permissions.isEmpty()) {
+            view.setPermissions(permissions);
+            view.setAuth(permissions);
+        } else {
+            view.setPermissions(Collections.emptyList());
+            view.setAuth(Collections.emptyList());
+        }
+        return view;
+    }
+}

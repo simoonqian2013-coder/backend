@@ -7,6 +7,7 @@ import com.qss.pet.dto.RoleCreateRequest;
 import com.qss.pet.dto.RoleUpdateRequest;
 import com.qss.pet.entity.SysRole;
 import com.qss.pet.mapper.SysRoleMapper;
+import com.qss.pet.mapper.SysRoleMenuMapper;
 import com.qss.pet.mapper.SysRolePermissionMapper;
 import com.qss.pet.mapper.SysUserRoleMapper;
 import com.qss.pet.service.RoleService;
@@ -22,13 +23,16 @@ public class RoleServiceImpl implements RoleService {
     private final SysRoleMapper roleMapper;
     private final SysRolePermissionMapper rolePermissionMapper;
     private final SysUserRoleMapper userRoleMapper;
+    private final SysRoleMenuMapper roleMenuMapper;
 
     public RoleServiceImpl(SysRoleMapper roleMapper,
                            SysRolePermissionMapper rolePermissionMapper,
-                           SysUserRoleMapper userRoleMapper) {
+                           SysUserRoleMapper userRoleMapper,
+                           SysRoleMenuMapper roleMenuMapper) {
         this.roleMapper = roleMapper;
         this.rolePermissionMapper = rolePermissionMapper;
         this.userRoleMapper = userRoleMapper;
+        this.roleMenuMapper = roleMenuMapper;
     }
 
     @Override
@@ -84,6 +88,18 @@ public class RoleServiceImpl implements RoleService {
         rolePermissionMapper.deletePermissionsByRoleId(request.getRoleId());
         for (Long permissionId : request.getPermissionIds()) {
             rolePermissionMapper.insertRolePermission(request.getRoleId(), permissionId);
+        }
+    }
+
+    @Override
+    @Transactional
+    public void assignMenus(Long roleId, List<Long> menuIds) {
+        roleMenuMapper.deleteMenusByRoleId(roleId);
+        if (menuIds == null || menuIds.isEmpty()) {
+            return;
+        }
+        for (Long menuId : menuIds) {
+            roleMenuMapper.insertRoleMenu(roleId, menuId);
         }
     }
 }
