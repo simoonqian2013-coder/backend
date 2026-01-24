@@ -73,6 +73,15 @@ public class MenuServiceImpl implements MenuService {
     }
 
     @Override
+    public List<MenuView> listMenuTreeByPermissions(List<String> permissions) {
+        List<MenuView> menuTree = listMenuTree();
+        if (permissions == null) {
+            permissions = Collections.emptyList();
+        }
+        return filterMenuByPermissions(menuTree, permissions);
+    }
+
+    @Override
     @Transactional
     public SysMenu createMenu(MenuCreateRequest request) {
         validateParent(request.getParentId(), null);
@@ -229,5 +238,33 @@ public class MenuServiceImpl implements MenuService {
             view.setAuth(Collections.emptyList());
         }
         return view;
+    }
+
+    private List<MenuView> filterMenuByPermissions(List<MenuView> menus, List<String> permissions) {
+        if (menus == null || menus.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<MenuView> result = new ArrayList<>();
+        for (MenuView menu : menus) {
+            List<MenuView> children = filterMenuByPermissions(menu.getChildren(), permissions);
+            boolean hasPermission = menu.getAuth() == null || menu.getAuth().isEmpty()
+                    || permissions.stream().anyMatch(menu.getAuth()::contains);
+            if (hasPermission || (children != null && !children.isEmpty())) {
+                MenuView copy = new MenuView();
+                copy.setId(menu.getId());
+                copy.setParentId(menu.getParentId());
+                copy.setTitle(menu.getTitle());
+                copy.setPath(menu.getPath());
+                copy.setIcon(menu.getIcon());
+                copy.setHeader(menu.getHeader());
+                copy.setSort(menu.getSort());
+                copy.setStatus(menu.getStatus());
+                copy.setPermissions(menu.getPermissions());
+                copy.setAuth(menu.getAuth());
+                copy.setChildren(children);
+                result.add(copy);
+            }
+        }
+        return result;
     }
 }

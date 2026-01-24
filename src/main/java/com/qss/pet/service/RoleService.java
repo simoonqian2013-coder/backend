@@ -20,4 +20,6 @@ public interface RoleService {
     void assignPermissions(AssignPermissionRequest request);
 
     void assignMenus(Long roleId, List<Long> menuIds);
+
+    List<Long> listPermissionIdsByRoleId(Long roleId);
 }

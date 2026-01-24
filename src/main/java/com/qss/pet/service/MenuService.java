@@ -12,6 +12,8 @@ public interface MenuService {
 
     List<MenuView> listMenuTreeByRoleIds(List<Long> roleIds);
 
+    List<MenuView> listMenuTreeByPermissions(List<String> permissions);
+
     SysMenu createMenu(MenuCreateRequest request);
 
     SysMenu updateMenu(Long menuId, MenuUpdateRequest request);

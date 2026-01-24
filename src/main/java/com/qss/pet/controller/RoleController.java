@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
 public class RoleController {
     private final RoleService roleService;
@@ -73,5 +75,11 @@ public class RoleController {
     public ApiResponse<Void> assignMenus(@Valid @RequestBody AssignMenuRequest request) {
         roleService.assignMenus(request.getRoleId(), request.getMenuIds());
         return ApiResponse.ok(null);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/api/roles/{id}/permissions")
+    public ApiResponse<List<Long>> listRolePermissionIds(@PathVariable("id") Long roleId) {
+        return ApiResponse.ok(roleService.listPermissionIdsByRoleId(roleId));
     }
 }

@@ -102,4 +102,9 @@ public class RoleServiceImpl implements RoleService {
             roleMenuMapper.insertRoleMenu(roleId, menuId);
         }
     }
+
+    @Override
+    public List<Long> listPermissionIdsByRoleId(Long roleId) {
+        return rolePermissionMapper.selectPermissionIdsByRoleId(roleId);
+    }
 }

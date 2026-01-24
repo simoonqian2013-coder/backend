@@ -40,8 +40,8 @@ public class MenuController {
 
     @GetMapping("/api/menus/current")
     public ApiResponse<List<MenuView>> listCurrentUserMenus() {
-        List<Long> roleIds = getCurrentRoleIds();
-        return ApiResponse.ok(menuService.listMenuTreeByRoleIds(roleIds));
+        List<String> permissions = getCurrentPermissionCodes();
+        return ApiResponse.ok(menuService.listMenuTreeByPermissions(permissions));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -77,17 +77,17 @@ public class MenuController {
         return ApiResponse.ok(null);
     }
 
-    private List<Long> getCurrentRoleIds() {
+    private List<String> getCurrentPermissionCodes() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !(authentication.getPrincipal() instanceof SecurityUser)) {
             return Collections.emptyList();
         }
         SecurityUser user = (SecurityUser) authentication.getPrincipal();
-        if (user.getRoles() == null || user.getRoles().isEmpty()) {
+        if (user.getPermissions() == null || user.getPermissions().isEmpty()) {
             return Collections.emptyList();
         }
-        return user.getRoles().stream()
-                .map(role -> role.getId())
+        return user.getPermissions().stream()
+                .map(permission -> permission.getCode())
                 .collect(Collectors.toList());
     }
 }
