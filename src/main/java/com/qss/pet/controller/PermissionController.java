@@ -2,6 +2,7 @@ package com.qss.pet.controller;
 
 import com.qss.pet.common.ApiResponse;
 import com.qss.pet.dto.PermissionCreateRequest;
+import com.qss.pet.dto.PermissionTreeNode;
 import com.qss.pet.entity.SysPermission;
 import com.qss.pet.service.PermissionService;
 import jakarta.validation.Valid;
@@ -25,6 +26,12 @@ public class PermissionController {
     @GetMapping("/api/permissions")
     public ApiResponse<List<SysPermission>> listPermissions() {
         return ApiResponse.ok(permissionService.listPermissions());
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/api/permissions/tree")
+    public ApiResponse<List<PermissionTreeNode>> listPermissionTree() {
+        return ApiResponse.ok(permissionService.listPermissionTree());
     }
 
     @PreAuthorize("hasRole('ADMIN')")

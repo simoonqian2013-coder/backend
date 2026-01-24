@@ -51,6 +51,15 @@ public class UserController {
         return ApiResponse.ok(null);
     }
 
+    @PreAuthorize("hasAuthority('sys:user:read')")
+    @GetMapping("/api/users/{id}/roles")
+    public ApiResponse<List<Long>> listUserRoleIds(@PathVariable("id") Long userId) {
+        List<Long> roleIds = userService.listRolesByUserId(userId).stream()
+                .map(role -> role.getId())
+                .collect(Collectors.toList());
+        return ApiResponse.ok(roleIds);
+    }
+
     @PreAuthorize("hasAuthority('sys:user:update')")
     @PutMapping("/api/users/{id}")
     public ApiResponse<UserView> updateUser(@PathVariable("id") Long userId,

@@ -13,6 +13,8 @@ public interface RoleService {
 
     Page<SysRole> pageRoles(int page, int size, String name);
 
+    List<SysRole> listAllRoles();
+
     SysRole updateRole(Long roleId, RoleUpdateRequest request);
 
     boolean deleteRole(Long roleId);

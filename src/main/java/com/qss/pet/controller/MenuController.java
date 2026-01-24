@@ -2,6 +2,7 @@ package com.qss.pet.controller;
 
 import com.qss.pet.common.ApiResponse;
 import com.qss.pet.dto.AssignMenuPermissionRequest;
+import com.qss.pet.dto.AssignMenuRoleRequest;
 import com.qss.pet.dto.MenuCreateRequest;
 import com.qss.pet.dto.MenuUpdateRequest;
 import com.qss.pet.dto.MenuView;
@@ -75,6 +76,19 @@ public class MenuController {
     public ApiResponse<Void> assignPermissions(@Valid @RequestBody AssignMenuPermissionRequest request) {
         menuService.assignPermissions(request.getMenuId(), request.getPermissionIds());
         return ApiResponse.ok(null);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/api/menus/assign-roles")
+    public ApiResponse<Void> assignRoles(@Valid @RequestBody AssignMenuRoleRequest request) {
+        menuService.assignRoles(request.getMenuId(), request.getRoleIds());
+        return ApiResponse.ok(null);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/api/menus/{id}/roles")
+    public ApiResponse<List<Long>> listMenuRoleIds(@PathVariable("id") Long menuId) {
+        return ApiResponse.ok(menuService.listRoleIdsByMenuId(menuId));
     }
 
     private List<String> getCurrentPermissionCodes() {

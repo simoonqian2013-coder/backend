@@ -149,6 +149,23 @@ public class MenuServiceImpl implements MenuService {
         }
     }
 
+    @Override
+    @Transactional
+    public void assignRoles(Long menuId, List<Long> roleIds) {
+        roleMenuMapper.deleteRolesByMenuId(menuId);
+        if (roleIds == null || roleIds.isEmpty()) {
+            return;
+        }
+        for (Long roleId : roleIds) {
+            roleMenuMapper.insertRoleMenu(roleId, menuId);
+        }
+    }
+
+    @Override
+    public List<Long> listRoleIdsByMenuId(Long menuId) {
+        return roleMenuMapper.selectRoleIdsByMenuId(menuId);
+    }
+
     private void deleteMenuRelations(Long menuId) {
         roleMenuMapper.deleteRolesByMenuId(menuId);
         menuPermissionMapper.deletePermissionsByMenuId(menuId);
@@ -215,7 +232,9 @@ public class MenuServiceImpl implements MenuService {
         }
         Map<Long, List<String>> permissionMap = new HashMap<>();
         for (MenuPermissionView row : rows) {
-            permissionMap.computeIfAbsent(row.getMenuId(), key -> new ArrayList<>()).add(row.getCode());
+            if (row.getCode() != null && row.getCode().startsWith("menu:")) {
+                permissionMap.computeIfAbsent(row.getMenuId(), key -> new ArrayList<>()).add(row.getCode());
+            }
         }
         return permissionMap;
     }

@@ -1,5 +1,6 @@
 package com.qss.pet.mapper;
 
+import com.qss.pet.dto.MenuPermissionDetail;
 import com.qss.pet.dto.MenuPermissionView;
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Insert;
@@ -36,4 +37,17 @@ public interface SysMenuPermissionMapper {
             </script>
             """)
     List<MenuPermissionView> selectPermissionCodesByMenuIds(@Param("menuIds") List<Long> menuIds);
+
+    @Select("""
+            <script>
+            SELECT mp.menu_id AS menuId, p.id AS id, p.code AS code, p.name AS name
+            FROM sys_menu_permission mp
+            JOIN sys_permission p ON p.id = mp.permission_id
+            WHERE mp.menu_id IN
+            <foreach collection='menuIds' item='menuId' open='(' separator=',' close=')'>
+                #{menuId}
+            </foreach>
+            </script>
+            """)
+    List<MenuPermissionDetail> selectPermissionDetailsByMenuIds(@Param("menuIds") List<Long> menuIds);
 }

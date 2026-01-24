@@ -60,6 +60,14 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
+    public List<SysRole> listAllRoles() {
+        return roleMapper.selectList(
+                Wrappers.lambdaQuery(SysRole.class)
+                        .orderByDesc(SysRole::getCreatedAt)
+        );
+    }
+
+    @Override
     public SysRole updateRole(Long roleId, RoleUpdateRequest request) {
         SysRole role = roleMapper.selectById(roleId);
         if (role == null) {

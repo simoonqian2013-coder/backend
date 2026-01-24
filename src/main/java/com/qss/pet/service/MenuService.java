@@ -21,4 +21,8 @@ public interface MenuService {
     boolean deleteMenu(Long menuId);
 
     void assignPermissions(Long menuId, List<Long> permissionIds);
+
+    void assignRoles(Long menuId, List<Long> roleIds);
+
+    List<Long> listRoleIdsByMenuId(Long menuId);
 }

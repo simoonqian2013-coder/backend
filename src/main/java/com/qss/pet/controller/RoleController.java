@@ -38,6 +38,12 @@ public class RoleController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/api/roles/all")
+    public ApiResponse<List<SysRole>> listAllRoles() {
+        return ApiResponse.ok(roleService.listAllRoles());
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/api/roles")
     public ApiResponse<SysRole> createRole(@Valid @RequestBody RoleCreateRequest request) {
         return ApiResponse.ok(roleService.createRole(request));

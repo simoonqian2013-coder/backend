@@ -79,6 +79,9 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void assignRoles(Long userId, List<Long> roleIds) {
         userRoleMapper.deleteRolesByUserId(userId);
+        if (roleIds == null || roleIds.isEmpty()) {
+            return;
+        }
         for (Long roleId : roleIds) {
             userRoleMapper.insertUserRole(userId, roleId);
         }
