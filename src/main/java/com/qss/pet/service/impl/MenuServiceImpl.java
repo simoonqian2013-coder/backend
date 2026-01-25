@@ -2,12 +2,15 @@ package com.qss.pet.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.qss.pet.dto.MenuCreateRequest;
+import com.qss.pet.dto.MenuPermissionDetail;
 import com.qss.pet.dto.MenuPermissionView;
 import com.qss.pet.dto.MenuUpdateRequest;
 import com.qss.pet.dto.MenuView;
 import com.qss.pet.entity.SysMenu;
+import com.qss.pet.entity.SysPermission;
 import com.qss.pet.mapper.SysMenuMapper;
 import com.qss.pet.mapper.SysMenuPermissionMapper;
+import com.qss.pet.mapper.SysPermissionMapper;
 import com.qss.pet.mapper.SysRoleMenuMapper;
 import com.qss.pet.service.MenuService;
 import org.springframework.stereotype.Service;
@@ -18,9 +21,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,13 +33,16 @@ public class MenuServiceImpl implements MenuService {
     private final SysMenuMapper menuMapper;
     private final SysRoleMenuMapper roleMenuMapper;
     private final SysMenuPermissionMapper menuPermissionMapper;
+    private final SysPermissionMapper permissionMapper;
 
     public MenuServiceImpl(SysMenuMapper menuMapper,
                            SysRoleMenuMapper roleMenuMapper,
-                           SysMenuPermissionMapper menuPermissionMapper) {
+                           SysMenuPermissionMapper menuPermissionMapper,
+                           SysPermissionMapper permissionMapper) {
         this.menuMapper = menuMapper;
         this.roleMenuMapper = roleMenuMapper;
         this.menuPermissionMapper = menuPermissionMapper;
+        this.permissionMapper = permissionMapper;
     }
 
     @Override
@@ -96,6 +104,7 @@ public class MenuServiceImpl implements MenuService {
         menu.setCreatedAt(LocalDateTime.now());
         menu.setUpdatedAt(LocalDateTime.now());
         menuMapper.insert(menu);
+        ensureMenuPermission(menu, null);
         return menu;
     }
 
@@ -106,6 +115,7 @@ public class MenuServiceImpl implements MenuService {
         if (menu == null) {
             return null;
         }
+        String previousPath = menu.getPath();
         validateParent(request.getParentId(), menuId);
         menu.setParentId(normalizeParentId(request.getParentId()));
         menu.setTitle(request.getTitle());
@@ -116,6 +126,7 @@ public class MenuServiceImpl implements MenuService {
         menu.setStatus(request.getStatus());
         menu.setUpdatedAt(LocalDateTime.now());
         menuMapper.updateById(menu);
+        ensureMenuPermission(menu, previousPath);
         return menu;
     }
 
@@ -285,5 +296,79 @@ public class MenuServiceImpl implements MenuService {
             }
         }
         return result;
+    }
+
+    private void ensureMenuPermission(SysMenu menu, String previousPath) {
+        if (menu == null) {
+            return;
+        }
+        String newCode = menuPermissionCode(menu.getPath());
+        if (newCode.isEmpty()) {
+            return;
+        }
+        SysPermission permission = null;
+        String previousCode = menuPermissionCode(previousPath);
+        if (!previousCode.isEmpty() && !previousCode.equals(newCode)) {
+            permission = permissionMapper.selectOne(Wrappers.lambdaQuery(SysPermission.class)
+                    .eq(SysPermission::getCode, previousCode));
+            if (permission != null) {
+                permission.setCode(newCode);
+            }
+        }
+        if (permission == null) {
+            permission = permissionMapper.selectOne(Wrappers.lambdaQuery(SysPermission.class)
+                    .eq(SysPermission::getCode, newCode));
+        }
+        if (permission == null) {
+            permission = new SysPermission();
+            permission.setCode(newCode);
+            permission.setName(menu.getTitle());
+            permission.setType("menu");
+            permission.setPath(menu.getPath());
+            permission.setSort(menu.getSort());
+            permission.setStatus(menu.getStatus());
+            permission.setCreatedAt(LocalDateTime.now());
+            permission.setUpdatedAt(LocalDateTime.now());
+            permissionMapper.insert(permission);
+        } else {
+            permission.setCode(newCode);
+            permission.setName(menu.getTitle());
+            permission.setType("menu");
+            permission.setPath(menu.getPath());
+            permission.setSort(menu.getSort());
+            permission.setStatus(menu.getStatus());
+            permission.setUpdatedAt(LocalDateTime.now());
+            permissionMapper.updateById(permission);
+        }
+        ensureMenuPermissionMapping(menu.getId(), permission.getId());
+    }
+
+    private void ensureMenuPermissionMapping(Long menuId, Long permissionId) {
+        if (menuId == null || permissionId == null) {
+            return;
+        }
+        List<MenuPermissionDetail> details = menuPermissionMapper
+                .selectPermissionDetailsByMenuIds(Collections.singletonList(menuId));
+        if (details == null) {
+            details = Collections.emptyList();
+        }
+        Set<Long> existingIds = new HashSet<>();
+        for (MenuPermissionDetail detail : details) {
+            existingIds.add(detail.getId());
+        }
+        if (!existingIds.contains(permissionId)) {
+            menuPermissionMapper.insertMenuPermission(menuId, permissionId);
+        }
+    }
+
+    private String menuPermissionCode(String path) {
+        if (path == null) {
+            return "";
+        }
+        String trimmed = path.startsWith("/") ? path.substring(1) : path;
+        if (trimmed.isEmpty()) {
+            return "";
+        }
+        return "menu:" + trimmed.replace("/", ":");
     }
 }
