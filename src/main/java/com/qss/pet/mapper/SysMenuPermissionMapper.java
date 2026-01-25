@@ -2,6 +2,7 @@ package com.qss.pet.mapper;
 
 import com.qss.pet.dto.MenuPermissionDetail;
 import com.qss.pet.dto.MenuPermissionView;
+import com.qss.pet.entity.SysPermission;
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
@@ -24,6 +25,12 @@ public interface SysMenuPermissionMapper {
             WHERE menu_id = #{menuId}
             """)
     int deletePermissionsByMenuId(Long menuId);
+
+    @Delete("""
+            DELETE FROM sys_menu_permission
+            WHERE permission_id = #{permissionId}
+            """)
+    int deleteMenusByPermissionId(Long permissionId);
 
     @Select("""
             <script>
@@ -50,4 +57,13 @@ public interface SysMenuPermissionMapper {
             </script>
             """)
     List<MenuPermissionDetail> selectPermissionDetailsByMenuIds(@Param("menuIds") List<Long> menuIds);
+
+    @Select("""
+            SELECT p.*
+            FROM sys_menu_permission mp
+            JOIN sys_permission p ON p.id = mp.permission_id
+            WHERE mp.menu_id = #{menuId}
+            ORDER BY p.sort, p.id
+            """)
+    List<SysPermission> selectPermissionsByMenuId(@Param("menuId") Long menuId);
 }

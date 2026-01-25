@@ -28,6 +28,12 @@ public interface SysRolePermissionMapper {
             """)
     int deletePermissionsByRoleId(Long roleId);
 
+    @Delete("""
+            DELETE FROM sys_role_permission
+            WHERE permission_id = #{permissionId}
+            """)
+    int deleteRolesByPermissionId(Long permissionId);
+
     @Select("""
             SELECT permission_id
             FROM sys_role_permission

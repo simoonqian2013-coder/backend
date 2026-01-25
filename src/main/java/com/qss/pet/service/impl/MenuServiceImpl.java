@@ -177,6 +177,31 @@ public class MenuServiceImpl implements MenuService {
         return roleMenuMapper.selectRoleIdsByMenuId(menuId);
     }
 
+    @Override
+    public List<Long> listPermissionIdsByMenuId(Long menuId) {
+        if (menuId == null) {
+            return Collections.emptyList();
+        }
+        List<MenuPermissionDetail> details = menuPermissionMapper
+                .selectPermissionDetailsByMenuIds(Collections.singletonList(menuId));
+        if (details == null || details.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return details.stream()
+                .map(MenuPermissionDetail::getId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<SysPermission> listPermissionsByMenuId(Long menuId) {
+        if (menuId == null) {
+            return Collections.emptyList();
+        }
+        List<SysPermission> permissions = menuPermissionMapper.selectPermissionsByMenuId(menuId);
+        return permissions == null ? Collections.emptyList() : permissions;
+    }
+
     private void deleteMenuRelations(Long menuId) {
         roleMenuMapper.deleteRolesByMenuId(menuId);
         menuPermissionMapper.deletePermissionsByMenuId(menuId);

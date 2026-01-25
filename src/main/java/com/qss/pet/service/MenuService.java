@@ -4,6 +4,7 @@ import com.qss.pet.dto.MenuCreateRequest;
 import com.qss.pet.dto.MenuUpdateRequest;
 import com.qss.pet.dto.MenuView;
 import com.qss.pet.entity.SysMenu;
+import com.qss.pet.entity.SysPermission;
 
 import java.util.List;
 
@@ -25,4 +26,8 @@ public interface MenuService {
     void assignRoles(Long menuId, List<Long> roleIds);
 
     List<Long> listRoleIdsByMenuId(Long menuId);
+
+    List<Long> listPermissionIdsByMenuId(Long menuId);
+
+    List<SysPermission> listPermissionsByMenuId(Long menuId);
 }

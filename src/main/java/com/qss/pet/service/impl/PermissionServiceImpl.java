@@ -4,11 +4,13 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.qss.pet.dto.MenuPermissionDetail;
 import com.qss.pet.dto.PermissionCreateRequest;
 import com.qss.pet.dto.PermissionTreeNode;
+import com.qss.pet.dto.PermissionUpdateRequest;
 import com.qss.pet.entity.SysPermission;
 import com.qss.pet.entity.SysMenu;
 import com.qss.pet.mapper.SysMenuPermissionMapper;
 import com.qss.pet.mapper.SysPermissionMapper;
 import com.qss.pet.mapper.SysMenuMapper;
+import com.qss.pet.mapper.SysRolePermissionMapper;
 import com.qss.pet.service.PermissionService;
 import org.springframework.stereotype.Service;
 
@@ -26,17 +28,25 @@ public class PermissionServiceImpl implements PermissionService {
     private final SysPermissionMapper permissionMapper;
     private final SysMenuMapper menuMapper;
     private final SysMenuPermissionMapper menuPermissionMapper;
+    private final SysRolePermissionMapper rolePermissionMapper;
 
     public PermissionServiceImpl(SysPermissionMapper permissionMapper,
                                  SysMenuMapper menuMapper,
-                                 SysMenuPermissionMapper menuPermissionMapper) {
+                                 SysMenuPermissionMapper menuPermissionMapper,
+                                 SysRolePermissionMapper rolePermissionMapper) {
         this.permissionMapper = permissionMapper;
         this.menuMapper = menuMapper;
         this.menuPermissionMapper = menuPermissionMapper;
+        this.rolePermissionMapper = rolePermissionMapper;
     }
 
     @Override
     public SysPermission createPermission(PermissionCreateRequest request) {
+        SysPermission existing = permissionMapper.selectOne(Wrappers.lambdaQuery(SysPermission.class)
+                .eq(SysPermission::getCode, request.getCode()));
+        if (existing != null) {
+            return existing;
+        }
         SysPermission permission = new SysPermission();
         permission.setCode(request.getCode());
         permission.setName(request.getName());
@@ -50,6 +60,49 @@ public class PermissionServiceImpl implements PermissionService {
         permission.setUpdatedAt(LocalDateTime.now());
         permissionMapper.insert(permission);
         return permission;
+    }
+
+    @Override
+    public SysPermission updatePermission(Long permissionId, PermissionUpdateRequest request) {
+        if (permissionId == null) {
+            return null;
+        }
+        SysPermission permission = permissionMapper.selectById(permissionId);
+        if (permission == null) {
+            return null;
+        }
+        SysPermission duplicate = permissionMapper.selectOne(Wrappers.lambdaQuery(SysPermission.class)
+                .eq(SysPermission::getCode, request.getCode())
+                .ne(SysPermission::getId, permissionId));
+        if (duplicate != null) {
+            throw new IllegalArgumentException("Permission code already exists");
+        }
+        permission.setCode(request.getCode());
+        permission.setName(request.getName());
+        permission.setType(request.getType());
+        permission.setMethod(request.getMethod());
+        permission.setPath(request.getPath());
+        permission.setParentId(request.getParentId());
+        permission.setSort(request.getSort());
+        permission.setStatus(request.getStatus());
+        permission.setUpdatedAt(LocalDateTime.now());
+        permissionMapper.updateById(permission);
+        return permission;
+    }
+
+    @Override
+    public boolean deletePermission(Long permissionId) {
+        if (permissionId == null) {
+            return false;
+        }
+        SysPermission permission = permissionMapper.selectById(permissionId);
+        if (permission == null) {
+            return false;
+        }
+        menuPermissionMapper.deleteMenusByPermissionId(permissionId);
+        rolePermissionMapper.deleteRolesByPermissionId(permissionId);
+        permissionMapper.deleteById(permissionId);
+        return true;
     }
 
     @Override
@@ -113,6 +166,7 @@ public class PermissionServiceImpl implements PermissionService {
                                              Map<String, SysPermission> permissionByCode,
                                              Map<Long, List<MenuPermissionDetail>> menuPermissionMap) {
         PermissionTreeNode node = new PermissionTreeNode();
+        node.setMenuId(menu.getId());
         SysPermission menuPermission = permissionByCode.get(menuPermissionCode(menu.getPath()));
         if (menuPermission != null) {
             node.setId(menuPermission.getId());

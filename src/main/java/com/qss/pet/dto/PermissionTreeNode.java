@@ -5,6 +5,7 @@ import java.util.List;
 public class PermissionTreeNode {
     private Object id;
     private String title;
+    private Long menuId;
     private boolean expand;
     private boolean disabled;
     private List<PermissionTreeNode> children;
@@ -23,6 +24,14 @@ public class PermissionTreeNode {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public Long getMenuId() {
+        return menuId;
+    }
+
+    public void setMenuId(Long menuId) {
+        this.menuId = menuId;
     }
 
     public boolean isExpand() {

@@ -86,6 +86,18 @@ public class MenuController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/api/menus/{id}/permissions")
+    public ApiResponse<List<Long>> listMenuPermissionIds(@PathVariable("id") Long menuId) {
+        return ApiResponse.ok(menuService.listPermissionIdsByMenuId(menuId));
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/api/menus/{id}/permissions/details")
+    public ApiResponse<List<com.qss.pet.entity.SysPermission>> listMenuPermissionDetails(@PathVariable("id") Long menuId) {
+        return ApiResponse.ok(menuService.listPermissionsByMenuId(menuId));
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/api/menus/{id}/roles")
     public ApiResponse<List<Long>> listMenuRoleIds(@PathVariable("id") Long menuId) {
         return ApiResponse.ok(menuService.listRoleIdsByMenuId(menuId));
