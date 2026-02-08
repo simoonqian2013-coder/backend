@@ -1,13 +1,17 @@
 package com.qss.pet.controller;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.qss.pet.common.ApiResponse;
 import com.qss.pet.dto.PetCreateRequest;
+import com.qss.pet.dto.PetImageItem;
 import com.qss.pet.dto.PetUpdateRequest;
 import com.qss.pet.dto.PetView;
 import com.qss.pet.entity.Pet;
 import com.qss.pet.service.PetService;
 import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,6 +26,7 @@ import java.util.stream.Collectors;
 
 @RestController
 public class PetController {
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private final PetService petService;
 
     public PetController(PetService petService) {
@@ -87,9 +92,30 @@ public class PetController {
         view.setAddress(pet.getAddress());
         view.setDetail(pet.getDetail());
         view.setImage(pet.getImage());
+        view.setImageUrls(parseImageUrls(pet));
         view.setStatus(pet.getStatus());
         view.setCreatedAt(pet.getCreatedAt());
         view.setUpdatedAt(pet.getUpdatedAt());
         return view;
+    }
+
+    private List<PetImageItem> parseImageUrls(Pet pet) {
+        if (pet == null) {
+            return List.of();
+        }
+        if (StringUtils.hasText(pet.getImageUrls())) {
+            try {
+                return OBJECT_MAPPER.readValue(pet.getImageUrls(), new TypeReference<List<PetImageItem>>() {});
+            } catch (Exception ignored) {
+                // fallback below
+            }
+        }
+        if (StringUtils.hasText(pet.getImage())) {
+            PetImageItem item = new PetImageItem();
+            item.setUrl(pet.getImage());
+            item.setIsMain(true);
+            return List.of(item);
+        }
+        return List.of();
     }
 }

@@ -31,6 +31,9 @@ public class Pet {
 
     private String image;
 
+    @TableField("image_urls")
+    private String imageUrls;
+
     private Integer status;
 
     @TableField("created_at")
@@ -117,6 +120,14 @@ public class Pet {
 
     public void setImage(String image) {
         this.image = image;
+    }
+
+    public String getImageUrls() {
+        return imageUrls;
+    }
+
+    public void setImageUrls(String imageUrls) {
+        this.imageUrls = imageUrls;
     }
 
     public Integer getStatus() {

@@ -1,6 +1,7 @@
 package com.qss.pet.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class PetView {
     private Long id;
@@ -13,6 +14,7 @@ public class PetView {
     private String address;
     private String detail;
     private String image;
+    private List<PetImageItem> imageUrls;
     private Integer status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -95,6 +97,14 @@ public class PetView {
 
     public void setImage(String image) {
         this.image = image;
+    }
+
+    public List<PetImageItem> getImageUrls() {
+        return imageUrls;
+    }
+
+    public void setImageUrls(List<PetImageItem> imageUrls) {
+        this.imageUrls = imageUrls;
     }
 
     public Integer getStatus() {

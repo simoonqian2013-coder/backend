@@ -3,6 +3,8 @@ package com.qss.pet.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
+import java.util.List;
+
 public class PetCreateRequest {
     @NotBlank
     private String nickname;
@@ -23,6 +25,8 @@ public class PetCreateRequest {
     private String detail;
 
     private String image;
+
+    private List<PetImageItem> imageUrls;
 
     @NotNull
     private Integer status;
@@ -97,6 +101,14 @@ public class PetCreateRequest {
 
     public void setImage(String image) {
         this.image = image;
+    }
+
+    public List<PetImageItem> getImageUrls() {
+        return imageUrls;
+    }
+
+    public void setImageUrls(List<PetImageItem> imageUrls) {
+        this.imageUrls = imageUrls;
     }
 
     public Integer getStatus() {

@@ -2,7 +2,10 @@ package com.qss.pet.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.qss.pet.dto.PetCreateRequest;
+import com.qss.pet.dto.PetImageItem;
 import com.qss.pet.dto.PetUpdateRequest;
 import com.qss.pet.entity.Pet;
 import com.qss.pet.mapper.PetMapper;
@@ -12,10 +15,12 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
 public class PetServiceImpl implements PetService {
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private final PetMapper petMapper;
 
     public PetServiceImpl(PetMapper petMapper) {
@@ -59,7 +64,9 @@ public class PetServiceImpl implements PetService {
         pet.setCity(request.getCity());
         pet.setAddress(request.getAddress());
         pet.setDetail(request.getDetail());
-        pet.setImage(request.getImage());
+        List<PetImageItem> imageItems = normalizeImageUrls(request.getImageUrls(), request.getImage());
+        pet.setImage(resolveMainImage(imageItems, request.getImage()));
+        pet.setImageUrls(toJson(imageItems));
         pet.setStatus(request.getStatus());
         pet.setCreatedAt(LocalDateTime.now());
         pet.setUpdatedAt(LocalDateTime.now());
@@ -98,8 +105,13 @@ public class PetServiceImpl implements PetService {
         if (request.getDetail() != null) {
             pet.setDetail(request.getDetail());
         }
-        if (request.getImage() != null) {
+        if (request.getImageUrls() != null) {
+            List<PetImageItem> imageItems = normalizeImageUrls(request.getImageUrls(), request.getImage());
+            pet.setImage(resolveMainImage(imageItems, request.getImage()));
+            pet.setImageUrls(toJson(imageItems));
+        } else if (request.getImage() != null) {
             pet.setImage(request.getImage());
+            pet.setImageUrls(toJson(normalizeImageUrls(null, request.getImage())));
         }
         pet.setStatus(request.getStatus());
         pet.setUpdatedAt(LocalDateTime.now());
@@ -116,5 +128,56 @@ public class PetServiceImpl implements PetService {
         }
         petMapper.deleteById(petId);
         return true;
+    }
+
+    private List<PetImageItem> normalizeImageUrls(List<PetImageItem> items, String fallbackImage) {
+        List<PetImageItem> normalized = new ArrayList<>();
+        if (items != null) {
+            for (PetImageItem item : items) {
+                if (item == null || !StringUtils.hasText(item.getUrl())) {
+                    continue;
+                }
+                PetImageItem safe = new PetImageItem();
+                safe.setUrl(item.getUrl());
+                safe.setIsMain(Boolean.TRUE.equals(item.getIsMain()));
+                normalized.add(safe);
+            }
+        }
+        if (normalized.isEmpty() && StringUtils.hasText(fallbackImage)) {
+            PetImageItem single = new PetImageItem();
+            single.setUrl(fallbackImage);
+            single.setIsMain(true);
+            normalized.add(single);
+        }
+        boolean hasMain = normalized.stream().anyMatch(item -> Boolean.TRUE.equals(item.getIsMain()));
+        if (!normalized.isEmpty() && !hasMain) {
+            normalized.get(0).setIsMain(true);
+        }
+        return normalized;
+    }
+
+    private String resolveMainImage(List<PetImageItem> items, String fallbackImage) {
+        if (items != null) {
+            for (PetImageItem item : items) {
+                if (item != null && Boolean.TRUE.equals(item.getIsMain()) && StringUtils.hasText(item.getUrl())) {
+                    return item.getUrl();
+                }
+            }
+            if (!items.isEmpty() && StringUtils.hasText(items.get(0).getUrl())) {
+                return items.get(0).getUrl();
+            }
+        }
+        return StringUtils.hasText(fallbackImage) ? fallbackImage : null;
+    }
+
+    private String toJson(List<PetImageItem> items) {
+        if (items == null || items.isEmpty()) {
+            return null;
+        }
+        try {
+            return OBJECT_MAPPER.writeValueAsString(items);
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("Failed to serialize pet image urls", e);
+        }
     }
 }

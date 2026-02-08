@@ -19,6 +19,9 @@ app:
   jwt:
     secret: change-me-to-a-long-random-secret-please
     expiration-minutes: 120
+  upload:
+    dir: ./uploads
+    url-prefix: /uploads/
 
 logging:
   level:

@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS pet (
   address VARCHAR(255) NULL,
   detail TEXT NULL,
   image VARCHAR(255) NULL,
+  image_urls TEXT NULL,
   status TINYINT NOT NULL DEFAULT 1,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -27,7 +28,8 @@ VALUES
   ('pet:read', 'Pet Read', 'API', 'GET', '/api/pets', 110, 1),
   ('pet:create', 'Pet Create', 'API', 'POST', '/api/pets', 120, 1),
   ('pet:update', 'Pet Update', 'API', 'PUT', '/api/pets/{id}', 130, 1),
-  ('pet:delete', 'Pet Delete', 'API', 'DELETE', '/api/pets/{id}', 140, 1)
+  ('pet:delete', 'Pet Delete', 'API', 'DELETE', '/api/pets/{id}', 140, 1),
+  ('pet:upload', 'Pet Upload Image', 'API', 'POST', '/api/pets/images', 150, 1)
 ON DUPLICATE KEY UPDATE code = code;
 
 INSERT INTO sys_role_permission (role_id, permission_id)
@@ -37,6 +39,7 @@ WHERE r.code = 'ADMIN' AND p.code IN (
   'pet:read',
   'pet:create',
   'pet:update',
-  'pet:delete'
+  'pet:delete',
+  'pet:upload'
 )
 ON DUPLICATE KEY UPDATE role_id = role_id;
