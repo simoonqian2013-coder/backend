@@ -33,7 +33,6 @@ public class PetController {
         this.petService = petService;
     }
 
-    @PreAuthorize("hasAuthority('pet:read')")
     @GetMapping("/api/pets")
     public ApiResponse<List<PetView>> listPets(@RequestParam(value = "keyword", required = false) String keyword,
                                                @RequestParam(value = "type", required = false) String type,
@@ -44,7 +43,6 @@ public class PetController {
         return ApiResponse.ok(pets);
     }
 
-    @PreAuthorize("hasAuthority('pet:read')")
     @GetMapping("/api/pets/{id}")
     public ApiResponse<PetView> getPet(@PathVariable("id") Long petId) {
         Pet pet = petService.getPet(petId);
