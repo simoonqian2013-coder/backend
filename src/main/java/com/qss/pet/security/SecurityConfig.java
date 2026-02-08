@@ -30,6 +30,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/health", "/api/auth/login", "/uploads/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/pets", "/api/pets/*").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/adoptions").permitAll()
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(ex -> ex

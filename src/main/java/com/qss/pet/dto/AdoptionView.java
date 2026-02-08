@@ -14,6 +14,7 @@ public class AdoptionView {
     private String petImage;
     private String applicantName;
     private String phone;
+    private String email;
     private String idNumber;
     private String city;
     private String address;
@@ -111,6 +112,14 @@ public class AdoptionView {
 
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public String getIdNumber() {

@@ -48,6 +48,7 @@ public class AdoptionServiceImpl implements AdoptionService {
         adoption.setApplicantUserId(applicantUserId);
         adoption.setApplicantName(request.getApplicantName());
         adoption.setPhone(request.getPhone());
+        adoption.setEmail(request.getEmail());
         adoption.setIdNumber(request.getIdNumber());
         adoption.setCity(request.getCity());
         adoption.setAddress(request.getAddress());

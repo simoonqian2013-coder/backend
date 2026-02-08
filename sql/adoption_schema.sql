@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS adoption (
   applicant_user_id BIGINT UNSIGNED NULL,
   applicant_name VARCHAR(100) NOT NULL,
   phone VARCHAR(30) NOT NULL,
+  email VARCHAR(100) NULL,
   id_number VARCHAR(30) NULL,
   city VARCHAR(100) NOT NULL,
   address VARCHAR(255) NOT NULL,

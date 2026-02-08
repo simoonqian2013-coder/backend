@@ -71,7 +71,6 @@ public class AdoptionController {
         return ApiResponse.ok(toViews(java.util.Collections.singletonList(adoption)).get(0));
     }
 
-    @PreAuthorize("hasAuthority('adoption:create')")
     @PostMapping("/api/adoptions")
     public ApiResponse<AdoptionView> createAdoption(@Valid @RequestBody AdoptionCreateRequest request) {
         Long userId = getCurrentUserId();
@@ -127,6 +126,7 @@ public class AdoptionController {
                     }
                     view.setApplicantName(adoption.getApplicantName());
                     view.setPhone(adoption.getPhone());
+                    view.setEmail(adoption.getEmail());
                     view.setIdNumber(adoption.getIdNumber());
                     view.setCity(adoption.getCity());
                     view.setAddress(adoption.getAddress());
