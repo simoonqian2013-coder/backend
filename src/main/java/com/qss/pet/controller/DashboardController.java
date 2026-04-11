@@ -157,10 +157,10 @@ public class DashboardController {
         LocalDateTime endTime = today.plusDays(1).atStartOfDay();
 
         QueryWrapper<Adoption> wrapper = new QueryWrapper<>();
-        wrapper.select("DATE(updated_at) AS day", "COUNT(*) AS count")
-                .ge("updated_at", startTime)
-                .lt("updated_at", endTime)
-                .groupBy("DATE(updated_at)");
+        wrapper.select("DATE(created_at) AS day", "COUNT(*) AS count")
+                .ge("created_at", startTime)
+                .lt("created_at", endTime)
+                .groupBy("DATE(created_at)");
         List<Map<String, Object>> rows = adoptionMapper.selectMaps(wrapper);
         Map<LocalDate, Long> dayCountMap = new HashMap<>();
         for (Map<String, Object> row : rows) {
