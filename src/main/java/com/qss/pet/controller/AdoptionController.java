@@ -71,6 +71,13 @@ public class AdoptionController {
         return ApiResponse.ok(toViews(java.util.Collections.singletonList(adoption)).get(0));
     }
 
+    @GetMapping("/api/adoptions/query")
+    public ApiResponse<List<AdoptionView>> queryAdoptions(@RequestParam("applicantName") String applicantName,
+                                                          @RequestParam("phone") String phone) {
+        List<Adoption> adoptions = adoptionService.listAdoptionsByApplicant(applicantName, phone);
+        return ApiResponse.ok(toViews(adoptions));
+    }
+
     @PostMapping("/api/adoptions")
     public ApiResponse<AdoptionView> createAdoption(@Valid @RequestBody AdoptionCreateRequest request) {
         Long userId = getCurrentUserId();

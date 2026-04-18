@@ -12,6 +12,8 @@ public interface AdoptionService {
 
     List<Adoption> listAdoptions(String keyword, Integer status, LocalDateTime startTime, LocalDateTime endTime);
 
+    List<Adoption> listAdoptionsByApplicant(String applicantName, String phone);
+
     List<Adoption> listMyAdoptions(Long applicantUserId);
 
     Adoption reviewAdoption(Long adoptionId, Long reviewerId, AdoptionReviewRequest request);

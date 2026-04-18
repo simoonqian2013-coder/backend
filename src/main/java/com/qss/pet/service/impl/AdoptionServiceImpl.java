@@ -83,6 +83,19 @@ public class AdoptionServiceImpl implements AdoptionService {
     }
 
     @Override
+    public List<Adoption> listAdoptionsByApplicant(String applicantName, String phone) {
+        if (!StringUtils.hasText(applicantName) || !StringUtils.hasText(phone)) {
+            return java.util.Collections.emptyList();
+        }
+        return adoptionMapper.selectList(
+                Wrappers.lambdaQuery(Adoption.class)
+                        .eq(Adoption::getApplicantName, applicantName.trim())
+                        .eq(Adoption::getPhone, phone.trim())
+                        .orderByDesc(Adoption::getCreatedAt)
+        );
+    }
+
+    @Override
     public List<Adoption> listMyAdoptions(Long applicantUserId) {
         if (applicantUserId == null) {
             return java.util.Collections.emptyList();
